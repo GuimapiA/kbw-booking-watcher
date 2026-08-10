@@ -33,6 +33,7 @@ Mots de passe des applications.
 4. Ouvre le "Planificateur de tâches" -> Créer une tâche de base ->
    déclencheur "toutes les 15 minutes" -> action:
    `python C:\chemin\vers\check_booking.py`
+   
 
 ## 4B. Option cloud (fonctionne même PC/téléphone éteints) — recommandé
 1. Crée un dépôt GitHub (privé de préférence) et mets-y ces fichiers.
