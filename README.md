@@ -54,4 +54,4 @@ Mots de passe des applications.
 - Le cron est réglé sur `*/5 * * * *` (toutes les 5 minutes). C'est
   déjà le minimum pratique fiable sur GitHub Actions — en dessous, les
   déclenchements peuvent être retardés par la charge de GitHub, donc
-  descendre plus bas n'apporterait rien de garanti.
+  descendre plus bas n'apporterait rien de garanti. 
