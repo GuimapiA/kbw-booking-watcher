@@ -4,7 +4,13 @@ on:
   schedule:
     # Toutes les 5 minutes
     - cron: "*/5 * * * *"
-  workflow_dispatch: {}   # permet de lancer manuellement depuis GitHub
+  workflow_dispatch:
+    inputs:
+      test_notify:
+        description: "Envoyer une notification de TEST (ignore les vraies données)"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write   # nécessaire pour committer le fichier d'état
@@ -24,6 +30,7 @@ jobs:
 
       - name: Lancer le script
         env:
+          FORCE_TEST_NOTIFY: ${{ github.event.inputs.test_notify }}
           API_URL: ${{ secrets.API_URL }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
