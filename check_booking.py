@@ -1,35 +1,33 @@
 #!/usr/bin/env python3
 """
-Surveille la page de réservation KBW (Yaoundé Deutsch B2) et notifie
-par Email + Telegram + notification bureau (Windows) dès qu'un
-changement d'état est détecté (ex: réservation ouverte).
+Surveille une ou plusieurs pages de réservation butlerapp (KBW, etc.)
+et notifie par Email + Telegram + notification bureau (Windows) dès
+qu'une session devient réservable (nouvelle session, ou place qui se
+libère sur une session existante).
 
 =========================
- ÉTAPE 1 - TROUVER L'API
+ AJOUTER UN NOUVEAU SITE
 =========================
-Le site est une appli JavaScript (butlerapp) : le HTML brut ne contient
-pas les cours, ils sont chargés via une requête AJAX après le
-chargement de la page. Pour trouver cette requête :
+Tous les sites suivis sont listés dans le fichier targets.json (à la
+racine du dépôt). Pour en ajouter un :
 
-  1. Ouvre la page dans Chrome/Firefox :
-     https://kbw-personal-services.butlerapp2.de/demo#/courses?fcourses=yaounde_deutsch_b2
-  2. Ouvre les outils développeur (F12) -> onglet "Réseau" / "Network"
-  3. Filtre sur "Fetch/XHR"
-  4. Recharge la page (F5)
-  5. Cherche une requête qui renvoie du JSON contenant le mot
-     "yaounde_deutsch_b2" ou des infos de cours (souvent une URL du
-     style https://kbw-personal-services.butlerapp2.de/api/... ou
-     .../rest/... ou .../ajax/...)
-  6. Clique dessus -> copie l'URL complète -> colle-la dans API_URL
-     ci-dessous.
-  7. Regarde la réponse JSON (onglet "Réponse"/"Preview") : repère le
-     champ qui indique que la réservation est ouverte (ex: "bookable":
-     true, "status": "open", "available_seats": 12, "state": "closed"...)
-     -> adapte la fonction is_booking_open() plus bas en conséquence.
-
-Si tu ne trouves pas d'API exploitable, utilise plutôt la variante
-Playwright (check_booking_playwright.py, fournie séparément) qui
-simule un vrai navigateur.
+  1. Ouvre la page du site dans Chrome/Edge/Firefox.
+  2. F12 -> onglet "Réseau"/"Network" -> filtre "Fetch/XHR"
+     -> "Preserve log" coché -> recharge la page (F5).
+  3. Cherche la requête qui renvoie du JSON avec des champs comme
+     "course_timespans", "places_left", "quantity_left" (même
+     structure que KBW, puisque c'est le même système butlerapp).
+  4. Copie l'URL complète de cette requête (onglet Headers -> Request
+     URL).
+  5. Ajoute une nouvelle entrée dans targets.json :
+       {
+         "name": "Nom affiché dans les notifications",
+         "page_url": "URL de la page pour affichage humain",
+         "api_url": "URL de l'API trouvée à l'étape 4"
+       }
+  6. Commit -> c'est tout, le script surveillera ce site en plus des
+     autres dès la prochaine exécution (pas besoin de toucher au code
+     Python ni aux secrets).
 """
 
 import json
@@ -44,20 +42,7 @@ import requests
 
 # ============ CONFIGURATION ============
 
-# URL de la page (affichage humain, utilisée dans les messages de notif)
-PAGE_URL = "https://kbw-personal-services.butlerapp2.de/demo#/courses?fcourses=yaounde_deutsch_b2"
-
-# --> METS ICI l'URL exacte trouvée dans l'onglet Réseau (Request URL)
-# Elle doit renvoyer le JSON "response_type": "response_collection", "name": "event_data"
-API_URL = os.environ.get("API_URL") or (
-    "https://kbw-personal-services.butlerapp2.de/api/book"
-    "?exclude=trainer,appointments,extra_prices,forms&page=1&perPage=10&fcourses=yaounde_deutsch_b2"
-)
-
-# Nom technique du cours à filtrer (vu dans le JSON: courses[0].attributes.name)
-COURSE_NAME = "yaounde_deutsch_b2"
-
-# Fichier local qui garde en mémoire le dernier état connu (id -> quantity_left)
+TARGETS_FILE = Path(__file__).parent / "targets.json"
 STATE_FILE = Path(__file__).parent / "last_state.json"
 
 # --- Notifications : mets True/False selon ce que tu veux activer ---
@@ -68,13 +53,30 @@ ENABLE_DESKTOP = True  # uniquement utile si le script tourne sur ton PC Windows
 # --- Email (SMTP) ---
 SMTP_HOST = os.environ.get("SMTP_HOST") or "smtp.gmail.com"
 SMTP_PORT = int(os.environ.get("SMTP_PORT") or "587")
-SMTP_USER = os.environ.get("SMTP_USER") or ""       # ton adresse email d'envoi
-SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD") or ""  # mot de passe d'application (pas ton mdp normal)
-EMAIL_TO = os.environ.get("EMAIL_TO") or SMTP_USER  # destinataire
+SMTP_USER = os.environ.get("SMTP_USER") or ""          # adresse d'envoi
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD") or ""  # mot de passe d'application
+
+# Plusieurs destinataires possibles, séparés par des virgules,
+# ex: "alice@example.com, bob@example.com"
+EMAIL_TO_RAW = os.environ.get("EMAIL_TO") or SMTP_USER
+EMAIL_RECIPIENTS = [e.strip() for e in EMAIL_TO_RAW.split(",") if e.strip()]
 
 # --- Telegram ---
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN") or ""
-TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID") or ""
+
+# Plusieurs chat_id possibles, séparés par des virgules,
+# ex: "6804016670, 123456789"
+TELEGRAM_CHAT_ID_RAW = os.environ.get("TELEGRAM_CHAT_ID") or ""
+TELEGRAM_CHAT_IDS = [c.strip() for c in TELEGRAM_CHAT_ID_RAW.split(",") if c.strip()]
+
+# ============ CIBLES À SURVEILLER ============
+
+
+def load_targets() -> list:
+    if not TARGETS_FILE.exists():
+        raise RuntimeError(f"Fichier introuvable: {TARGETS_FILE}")
+    return json.loads(TARGETS_FILE.read_text())
+
 
 # ============ LOGIQUE DE DÉTECTION ============
 
@@ -88,19 +90,14 @@ def _url_with_page(url: str, page: int) -> str:
     return urlunsplit((parts.scheme, parts.netloc, parts.path, new_query, parts.fragment))
 
 
-def fetch_page(page: int) -> dict:
-    if not API_URL:
-        raise RuntimeError(
-            "API_URL n'est pas configurée. Va chercher l'URL dans l'onglet "
-            "Réseau des DevTools (voir instructions en haut du fichier)."
-        )
-    url = _url_with_page(API_URL, page)
+def fetch_page(api_url: str, page: int) -> dict:
+    url = _url_with_page(api_url, page)
     resp = requests.get(url, timeout=20, headers={"User-Agent": "Mozilla/5.0"})
     resp.raise_for_status()
     return resp.json()
 
 
-def fetch_all_timespans() -> dict:
+def fetch_all_timespans(api_url: str) -> dict:
     """
     Récupère TOUTES les pages (pas seulement la première) pour ne
     manquer aucune session, même celles ajoutées au-delà de la
@@ -109,7 +106,7 @@ def fetch_all_timespans() -> dict:
     page = 1
     combined = {}
     while True:
-        data = fetch_page(page)
+        data = fetch_page(api_url, page)
         combined.update(extract_timespans(data))
 
         pagination = data["body"].get("pagination", {}).get("body", {})
@@ -122,37 +119,29 @@ def fetch_all_timespans() -> dict:
 
 def extract_timespans(data: dict) -> dict:
     """
-    Extrait, pour chaque session (course_timespan) du cours COURSE_NAME,
-    un petit résumé: {id: {"quantity_left": int, "label": str}}
+    Extrait, pour chaque session (course_timespan) trouvée dans la
+    réponse, un petit résumé:
+    {id: {"quantity_left": int, "label": str, "book_url": str}}
 
     Le bouton de réservation du site est actif quand quantity_left > 0
     (places_left suit la même valeur dans les données observées).
     """
     entities = data["body"]["entities"]["body"]
 
-    # ID du cours correspondant à COURSE_NAME
-    course_ids = {
-        c["attributes"]["id"]
-        for c in entities.get("courses", [])
-        if c["attributes"].get("name") == COURSE_NAME
-    }
-
     result = {}
     for ts in entities.get("course_timespans", []):
-        related_course_ids = set(ts.get("related", {}).get("courses", {}).get("value", []))
-        if course_ids and not (related_course_ids & course_ids):
-            continue  # cette session n'appartient pas au cours qu'on surveille
-
         attrs = ts["attributes"]
+        presented = ts.get("presented", {})
         result[attrs["id"]] = {
             "quantity_left": attrs.get("quantity_left", attrs.get("places_left", -1)),
-            "label": ts.get("presented", {}).get("titleReplaced", "")
-            + " (" + attrs.get("shortcut", "") + ")",
+            "label": presented.get("titleReplaced", "") + " (" + attrs.get("shortcut", "") + ")",
+            "book_url": presented.get("apiBookUrl", ""),
         }
     return result
 
 
 def load_last_state() -> dict:
+    """Retourne { target_name: { ts_id: {...} } }"""
     if STATE_FILE.exists():
         try:
             return json.loads(STATE_FILE.read_text())
@@ -169,6 +158,7 @@ def detect_newly_bookable(previous: dict, current: dict) -> list:
     """
     Retourne la liste des sessions qui viennent de devenir réservables
     (quantity_left passe de <= 0 (ou inexistant) à > 0).
+    Chaque élément est un dict {"label": str, "book_url": str}.
     """
     newly_open = []
     for ts_id, info in current.items():
@@ -181,7 +171,10 @@ def detect_newly_bookable(previous: dict, current: dict) -> list:
         is_open = curr_qty > 0
 
         if is_open and not was_open:
-            newly_open.append(info["label"] or f"session #{ts_id}")
+            newly_open.append({
+                "label": info["label"] or f"session #{ts_id}",
+                "book_url": info.get("book_url", ""),
+            })
 
     return newly_open
 
@@ -190,31 +183,35 @@ def detect_newly_bookable(previous: dict, current: dict) -> list:
 
 
 def notify_email(subject: str, body: str):
-    if not (ENABLE_EMAIL and SMTP_USER and SMTP_PASSWORD and EMAIL_TO):
+    if not (ENABLE_EMAIL and SMTP_USER and SMTP_PASSWORD and EMAIL_RECIPIENTS):
         return
-    msg = MIMEText(body)
-    msg["Subject"] = subject
-    msg["From"] = SMTP_USER
-    msg["To"] = EMAIL_TO
     try:
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
             server.starttls()
             server.login(SMTP_USER, SMTP_PASSWORD)
-            server.send_message(msg)
-        print("[Email] envoyé.")
+            for recipient in EMAIL_RECIPIENTS:
+                msg = MIMEText(body)
+                msg["Subject"] = subject
+                msg["From"] = SMTP_USER
+                msg["To"] = recipient
+                server.send_message(msg)
+        print(f"[Email] envoyé à {len(EMAIL_RECIPIENTS)} destinataire(s).")
     except Exception as e:
         print(f"[Email] erreur: {e}")
 
 
 def notify_telegram(text: str):
-    if not (ENABLE_TELEGRAM and TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID):
+    if not (ENABLE_TELEGRAM and TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_IDS):
         return
-    try:
-        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-        requests.post(url, data={"chat_id": TELEGRAM_CHAT_ID, "text": text}, timeout=15)
-        print("[Telegram] envoyé.")
-    except Exception as e:
-        print(f"[Telegram] erreur: {e}")
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    ok_count = 0
+    for chat_id in TELEGRAM_CHAT_IDS:
+        try:
+            requests.post(url, data={"chat_id": chat_id, "text": text}, timeout=15)
+            ok_count += 1
+        except Exception as e:
+            print(f"[Telegram] erreur pour chat_id={chat_id}: {e}")
+    print(f"[Telegram] envoyé à {ok_count}/{len(TELEGRAM_CHAT_IDS)} destinataire(s).")
 
 
 def notify_desktop(title: str, message: str):
@@ -229,12 +226,19 @@ def notify_desktop(title: str, message: str):
         print(f"[Bureau] notification ignorée: {e}")
 
 
-def notify_newly_open(sessions: list):
-    title = "🎉 Réservation OUVERTE - Yaoundé Deutsch B2"
+def notify_newly_open(target_name: str, page_url: str, sessions: list):
+    title = f"🎉 Réservation OUVERTE - {target_name}"
+    lines = []
+    for s in sessions:
+        line = f"- {s['label']}"
+        if s.get("book_url"):
+            line += f"\n  👉 Réserver : {s['book_url']}"
+        lines.append(line)
+
     body = (
         f"{title}\n\nSession(s) désormais réservable(s) :\n"
-        + "\n".join(f"- {s}" for s in sessions)
-        + f"\n\n{PAGE_URL}\n\nVa réserver vite !"
+        + "\n".join(lines)
+        + f"\n\nPage complète : {page_url}\n\nVa réserver vite !"
     )
     notify_email(title, body)
     notify_telegram(body)
@@ -245,33 +249,55 @@ def notify_newly_open(sessions: list):
 
 
 def main():
-    # Mode test : force l'envoi d'une notification Telegram factice,
-    # sans aller chercher les vraies données du site. Utile pour
-    # vérifier que Telegram/Email/Bureau fonctionnent correctement.
+    # Mode test : force l'envoi d'une notification Telegram/Email
+    # factice, sans aller chercher les vraies données. Utile pour
+    # vérifier que les identifiants fonctionnent correctement.
     if os.environ.get("FORCE_TEST_NOTIFY") == "true":
         print("Mode TEST activé : envoi d'une notification factice...")
-        notify_newly_open(["[TEST] Session factice 12.08.2026 8:00 Uhr"])
+        notify_newly_open(
+            "[TEST] Cible factice",
+            "https://example.com",
+            [{"label": "[TEST] Session factice 12.08.2026 8:00 Uhr", "book_url": "https://example.com/bookcart?ftimespans=0"}],
+        )
         print("Notification de test envoyée (si les identifiants sont corrects).")
         return
 
-    try:
-        current = fetch_all_timespans()
-    except Exception as e:
-        print(f"Erreur lors de la récupération/lecture des données: {e}")
+    targets = load_targets()
+    all_state = load_last_state()
+    new_all_state = {}
+    any_error = False
+
+    for target in targets:
+        name = target["name"]
+        api_url = target["api_url"]
+        page_url = target.get("page_url", api_url)
+
+        print(f"--- Vérification: {name} ---")
+        try:
+            current = fetch_all_timespans(api_url)
+        except Exception as e:
+            print(f"Erreur pour '{name}': {e}")
+            any_error = True
+            # on garde l'ancien état de cette cible pour ne pas perdre
+            # sa mémoire à cause d'une erreur réseau ponctuelle
+            new_all_state[name] = all_state.get(name, {})
+            continue
+
+        previous = all_state.get(name, {})
+        newly_open = detect_newly_bookable(previous, current)
+
+        print(f"{len(current)} session(s) suivie(s). {len(newly_open)} nouvellement réservable(s).")
+
+        if newly_open:
+            print(f">> Changement détecté pour '{name}' ! Envoi des notifications...")
+            notify_newly_open(name, page_url, newly_open)
+
+        new_all_state[name] = {str(k): v for k, v in current.items()}
+
+    save_state(new_all_state)
+
+    if any_error:
         sys.exit(1)
-
-    previous = load_last_state()
-
-    newly_open = detect_newly_bookable(previous, current)
-
-    print(f"{len(current)} session(s) suivie(s). {len(newly_open)} nouvellement réservable(s).")
-
-    if newly_open:
-        print(">> Changement détecté ! Envoi des notifications...")
-        notify_newly_open(newly_open)
-
-    # Sauvegarde l'état courant pour la prochaine comparaison
-    save_state({str(k): v for k, v in current.items()})
 
 
 if __name__ == "__main__":
