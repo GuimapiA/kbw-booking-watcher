@@ -245,6 +245,15 @@ def notify_newly_open(sessions: list):
 
 
 def main():
+    # Mode test : force l'envoi d'une notification Telegram factice,
+    # sans aller chercher les vraies données du site. Utile pour
+    # vérifier que Telegram/Email/Bureau fonctionnent correctement.
+    if os.environ.get("FORCE_TEST_NOTIFY") == "true":
+        print("Mode TEST activé : envoi d'une notification factice...")
+        notify_newly_open(["[TEST] Session factice 12.08.2026 8:00 Uhr"])
+        print("Notification de test envoyée (si les identifiants sont corrects).")
+        return
+
     try:
         current = fetch_all_timespans()
     except Exception as e:
