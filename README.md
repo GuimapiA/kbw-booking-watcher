@@ -55,3 +55,4 @@ Mots de passe des applications.
   déjà le minimum pratique fiable sur GitHub Actions — en dessous, les
   déclenchements peuvent être retardés par la charge de GitHub, donc
   descendre plus bas n'apporterait rien de garanti. 
+
