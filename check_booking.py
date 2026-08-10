@@ -49,10 +49,9 @@ PAGE_URL = "https://kbw-personal-services.butlerapp2.de/demo#/courses?fcourses=y
 
 # --> METS ICI l'URL exacte trouvée dans l'onglet Réseau (Request URL)
 # Elle doit renvoyer le JSON "response_type": "response_collection", "name": "event_data"
-API_URL = os.environ.get(
-    "API_URL",
+API_URL = os.environ.get("API_URL") or (
     "https://kbw-personal-services.butlerapp2.de/api/book"
-    "?exclude=trainer,appointments,extra_prices,forms&page=1&perPage=10&fcourses=yaounde_deutsch_b2",
+    "?exclude=trainer,appointments,extra_prices,forms&page=1&perPage=10&fcourses=yaounde_deutsch_b2"
 )
 
 # Nom technique du cours à filtrer (vu dans le JSON: courses[0].attributes.name)
@@ -67,15 +66,15 @@ ENABLE_TELEGRAM = True
 ENABLE_DESKTOP = True  # uniquement utile si le script tourne sur ton PC Windows
 
 # --- Email (SMTP) ---
-SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
-SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
-SMTP_USER = os.environ.get("SMTP_USER", "")       # ton adresse email d'envoi
-SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")  # mot de passe d'application (pas ton mdp normal)
-EMAIL_TO = os.environ.get("EMAIL_TO", SMTP_USER)  # destinataire
+SMTP_HOST = os.environ.get("SMTP_HOST") or "smtp.gmail.com"
+SMTP_PORT = int(os.environ.get("SMTP_PORT") or "587")
+SMTP_USER = os.environ.get("SMTP_USER") or ""       # ton adresse email d'envoi
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD") or ""  # mot de passe d'application (pas ton mdp normal)
+EMAIL_TO = os.environ.get("EMAIL_TO") or SMTP_USER  # destinataire
 
 # --- Telegram ---
-TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
-TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN") or ""
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID") or ""
 
 # ============ LOGIQUE DE DÉTECTION ============
 
