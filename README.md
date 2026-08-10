@@ -47,6 +47,7 @@ Mots de passe des applications.
    téléphone (l'appli Telegram/ta boîte mail), sans rien installer
    sur Android.
 
+
 ## Notes
 - La notification "bureau" (`ENABLE_DESKTOP`) ne fonctionne que si le
   script tourne sur ton PC — inutile/ignorée sur GitHub Actions.
