@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Yaoundé - Deutsch B2",
+    "page_url": "https://kbw-personal-services.butlerapp2.de/demo#/courses?fcourses=yaounde_deutsch_b2",
+    "api_url": "https://kbw-personal-services.butlerapp2.de/api/book?exclude=trainer,appointments,extra_prices,forms&page=1&perPage=10&fcourses=yaounde_deutsch_b2"
+  },
+  {
+    "name": "Douala - Deutsch B2",
+    "page_url": "https://kbw-personal-services.butlerapp2.de/demo#/courses?fcourses=douala_deutsch_b2",
+    "api_url": "https://kbw-personal-services.butlerapp2.de/api/book?exclude=trainer,appointments,extra_prices,forms&page=1&perPage=10&fcourses=douala_deutsch_b2"
+  },
+  {
+    "name": "Douala - Deutsch B1",
+    "page_url": "https://kbw-personal-services.butlerapp2.de/demo#/courses?fcourses=douala_deutsch_b1",
+    "api_url": "https://kbw-personal-services.butlerapp2.de/api/book?exclude=trainer,appointments,extra_prices,forms&page=1&perPage=10&fcourses=douala_deutsch_b1"
+  },
+  {
+    "name": "Yaoundé - Deutsch B1",
+    "page_url": "https://kbw-personal-services.butlerapp2.de/demo#/courses?fcourses=yaounde_deutsch_b1",
+    "api_url": "https://kbw-personal-services.butlerapp2.de/api/book?exclude=trainer,appointments,extra_prices,forms&page=1&perPage=10&fcourses=yaounde_deutsch_b1"
+  },
+  {
+    "name": "Yaoundé - Deutsch B2 Schriftlich Wiederholungsprüfung",
+    "page_url": "https://kbw-personal-services.butlerapp2.de/demo#/courses?fcourses=yaounde_deutsch_b2_schriftlich_wiederholungspruefung",
+    "api_url": "https://kbw-personal-services.butlerapp2.de/api/book?exclude=trainer,appointments,extra_prices,forms&page=1&perPage=10&fcourses=yaounde_deutsch_b2_schriftlich_wiederholungspruefung"
+  }
+]
