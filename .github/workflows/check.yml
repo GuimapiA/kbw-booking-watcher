@@ -1,0 +1,43 @@
+name: Check KBW booking
+
+on:
+  schedule:
+    # Toutes les 5 minutes
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}   # permet de lancer manuellement depuis GitHub
+
+permissions:
+  contents: write   # nécessaire pour committer le fichier d'état
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Installer les dépendances
+        run: pip install requests
+
+      - name: Lancer le script
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python check_booking.py
+
+      - name: Sauvegarder l'état (commit)
+        run: |
+          git config user.name "booking-watcher-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add last_state.json
+          git diff --quiet --cached || git commit -m "update state"
+          git push
