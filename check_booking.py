@@ -34,6 +34,7 @@ import json
 import os
 import smtplib
 import sys
+from datetime import datetime, timezone
 from email.mime.text import MIMEText
 from pathlib import Path
 from urllib.parse import urlsplit, urlunsplit, parse_qs, urlencode
@@ -44,6 +45,12 @@ import requests
 
 TARGETS_FILE = Path(__file__).parent / "targets.json"
 STATE_FILE = Path(__file__).parent / "last_state.json"
+
+# --- Fenêtre horaire de surveillance (heure du Cameroun, UTC+1 toute
+# l'année, pas de changement d'heure d'été) ---
+CAMEROON_UTC_OFFSET_HOURS = 1
+ACTIVE_HOUR_START = 7   # inclus
+ACTIVE_HOUR_END = 18    # exclu (donc actif jusqu'à 17:59 heure du Cameroun)
 
 # --- Notifications : mets True/False selon ce que tu veux activer ---
 ENABLE_EMAIL = True
@@ -76,6 +83,16 @@ def load_targets() -> list:
     if not TARGETS_FILE.exists():
         raise RuntimeError(f"Fichier introuvable: {TARGETS_FILE}")
     return json.loads(TARGETS_FILE.read_text())
+
+
+def is_within_active_window() -> bool:
+    """
+    Vrai si l'heure actuelle (convertie en heure du Cameroun) est dans
+    la fenêtre de surveillance [ACTIVE_HOUR_START, ACTIVE_HOUR_END).
+    """
+    now_utc = datetime.now(timezone.utc)
+    cameroon_hour = (now_utc.hour + CAMEROON_UTC_OFFSET_HOURS) % 24
+    return ACTIVE_HOUR_START <= cameroon_hour < ACTIVE_HOUR_END
 
 
 # ============ LOGIQUE DE DÉTECTION ============
@@ -260,6 +277,15 @@ def main():
             [{"label": "[TEST] Session factice 12.08.2026 8:00 Uhr", "book_url": "https://example.com/bookcart?ftimespans=0"}],
         )
         print("Notification de test envoyée (si les identifiants sont corrects).")
+        return
+
+    if not is_within_active_window():
+        now_utc = datetime.now(timezone.utc)
+        cameroon_hour = (now_utc.hour + CAMEROON_UTC_OFFSET_HOURS) % 24
+        print(
+            f"Hors fenêtre de surveillance (heure actuelle au Cameroun: {cameroon_hour}h, "
+            f"fenêtre active: {ACTIVE_HOUR_START}h-{ACTIVE_HOUR_END}h). Aucune vérification effectuée."
+        )
         return
 
     targets = load_targets()
