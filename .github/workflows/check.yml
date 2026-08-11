@@ -2,8 +2,12 @@ name: Check KBW booking
 
 on:
   schedule:
-    # Toutes les 5 minutes
+    # Gardé en solution de secours (best-effort côté GitHub, peu fiable)
     - cron: "*/5 * * * *"
+  repository_dispatch:
+    # Déclenché depuis l'extérieur (cron-job.org) via l'API GitHub,
+    # pour contourner les délais du déclencheur "schedule" natif.
+    types: [check-booking]
   workflow_dispatch:
     inputs:
       test_notify:
