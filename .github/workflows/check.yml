@@ -2,8 +2,9 @@ name: Check KBW booking
 
 on:
   schedule:
-    # Gardé en solution de secours (best-effort côté GitHub, peu fiable)
-    - cron: "*/5 * * * *"
+    # Solution de secours (best-effort côté GitHub) — limité à la
+    # fenêtre 6h-16h59 UTC = 7h-18h heure du Cameroun (UTC+1)
+    - cron: "*/5 6-16 * * *"
   repository_dispatch:
     # Déclenché depuis l'extérieur (cron-job.org) via l'API GitHub,
     # pour contourner les délais du déclencheur "schedule" natif.
