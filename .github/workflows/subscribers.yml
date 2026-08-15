@@ -1,0 +1,39 @@
+name: Manage Telegram subscribers
+
+on:
+  schedule:
+    # Toute la journée (pas limité à 7h-18h, les gens peuvent s'inscrire
+    # à toute heure), toutes les 5 minutes
+    - cron: "*/5 * * * *"
+  repository_dispatch:
+    types: [manage-subscribers]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  manage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Installer les dépendances
+        run: pip install requests
+
+      - name: Gérer les abonnés
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: python manage_subscribers.py
+
+      - name: Sauvegarder les abonnés (commit)
+        run: |
+          git config user.name "booking-watcher-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add subscribers.json
+          git diff --quiet --cached || git commit -m "update subscribers"
+          git push
