@@ -1,60 +1,56 @@
-# Surveillance des réservations KBW (Yaoundé Deutsch B2)
+name: Check KBW booking
 
-## 1. URL de l'API (déjà configurée)
-L'URL de l'API et la logique de détection sont déjà en place dans
-`check_booking.py` :
-- Le script parcourt **toutes les pages** de résultats (pas juste la
-  première), pour ne rater aucune session même après ajout d'un
-  nouveau mois.
-- Il compare l'état actuel de chaque session (`quantity_left`) à
-  l'état précédent (`last_state.json`), et notifie dès qu'une session
-  passe de "complet" (≤ 0 places) à "réservable" (> 0 places) — que ce
-  soit une session existante qui se libère ou une toute nouvelle
-  session qui apparaît.
+on:
+  schedule:
+    # Solution de secours (best-effort côté GitHub) — limité à la
+    # fenêtre 6h-16h59 UTC = 7h-18h heure du Cameroun (UTC+1)
+    - cron: "*/5 6-16 * * *"
+  repository_dispatch:
+    # Déclenché depuis l'extérieur (cron-job.org) via l'API GitHub,
+    # pour contourner les délais du déclencheur "schedule" natif.
+    types: [check-booking]
+  workflow_dispatch:
+    inputs:
+      test_notify:
+        description: "Envoyer une notification de TEST (ignore les vraies données)"
+        required: false
+        type: boolean
+        default: false
 
-## 2. Créer le bot Telegram (5 min)
-1. Dans Telegram, cherche **@BotFather**, envoie `/newbot`, suis les
-   étapes -> tu obtiens un **token** (`TELEGRAM_BOT_TOKEN`).
-2. Envoie un message à ton nouveau bot (n'importe quoi).
-3. Va sur `https://api.telegram.org/bot<TON_TOKEN>/getUpdates` dans
-   un navigateur -> tu verras ton `chat.id` (`TELEGRAM_CHAT_ID`).
+permissions:
+  contents: write   # nécessaire pour committer le fichier d'état
 
-## 3. Configurer l'email (si tu utilises Gmail)
-Crée un **mot de passe d'application** Gmail (pas ton mot de passe
-normal) : Compte Google -> Sécurité -> Validation en 2 étapes ->
-Mots de passe des applications.
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-## 4A. Option PC (Windows) — Planificateur de tâches
-1. Installe Python : https://python.org
-2. `pip install -r requirements.txt`
-3. Renseigne les variables (`API_URL`, `SMTP_USER`, etc.) soit
-   directement dans le script, soit comme variables d'environnement
-   Windows.
-4. Ouvre le "Planificateur de tâches" -> Créer une tâche de base ->
-   déclencheur "toutes les 15 minutes" -> action:
-   `python C:\chemin\vers\check_booking.py`
-   
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-## 4B. Option cloud (fonctionne même PC/téléphone éteints) — recommandé
-1. Crée un dépôt GitHub (privé de préférence) et mets-y ces fichiers.
-2. Dans le dépôt : Settings -> Secrets and variables -> Actions ->
-   ajoute chaque valeur (`API_URL`, `TELEGRAM_BOT_TOKEN`,
-   `TELEGRAM_CHAT_ID`, `SMTP_USER`, `SMTP_PASSWORD`, `EMAIL_TO`,
-   `SMTP_HOST`, `SMTP_PORT`) comme "Repository secret".
-3. Le fichier `.github/workflows/check.yml` est déjà prêt : GitHub
-   exécutera le script automatiquement toutes les 15 minutes, gratuit.
-4. Les notifications Telegram/Email arriveront directement sur ton
-   téléphone (l'appli Telegram/ta boîte mail), sans rien installer
-   sur Android.
+      - name: Installer les dépendances
+        run: pip install requests
 
+      - name: Lancer le script
+        env:
+          FORCE_TEST_NOTIFY: ${{ github.event.inputs.test_notify }}
+          API_URL: ${{ secrets.API_URL }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          EMAIL_SHEET_CSV_URL: ${{ secrets.EMAIL_SHEET_CSV_URL }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python check_booking.py
 
-## Notes
-- La notification "bureau" (`ENABLE_DESKTOP`) ne fonctionne que si le
-  script tourne sur ton PC — inutile/ignorée sur GitHub Actions.
-- Le script ne notifie que lors du **passage** de "fermé" à "ouvert"
-  (pas à chaque exécution), grâce à `last_state.json`.
-- Le cron est réglé sur `*/5 * * * *` (toutes les 5 minutes). C'est
-  déjà le minimum pratique fiable sur GitHub Actions — en dessous, les
-  déclenchements peuvent être retardés par la charge de GitHub, donc
-  descendre plus bas n'apporterait rien de garanti. 
-
+      - name: Sauvegarder l'état (commit)
+        run: |
+          git config user.name "booking-watcher-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add last_state.json docs/status.json
+          git diff --quiet --cached || git commit -m "update state"
+          git push
