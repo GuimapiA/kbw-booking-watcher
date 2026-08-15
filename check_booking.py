@@ -71,10 +71,44 @@ EMAIL_RECIPIENTS = [e.strip() for e in EMAIL_TO_RAW.split(",") if e.strip()]
 # --- Telegram ---
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN") or ""
 
-# Plusieurs chat_id possibles, séparés par des virgules,
-# ex: "6804016670, 123456789"
+# Destinataires "fixes" (secret GitHub, optionnel), en plus des abonnés
+# dynamiques dans subscribers.json
 TELEGRAM_CHAT_ID_RAW = os.environ.get("TELEGRAM_CHAT_ID") or ""
-TELEGRAM_CHAT_IDS = [c.strip() for c in TELEGRAM_CHAT_ID_RAW.split(",") if c.strip()]
+STATIC_TELEGRAM_CHAT_IDS = [c.strip() for c in TELEGRAM_CHAT_ID_RAW.split(",") if c.strip()]
+
+SUBSCRIBERS_FILE = Path(__file__).parent / "subscribers.json"
+
+# URL CSV publique du Google Sheet lié au Google Form (emails), optionnel
+EMAIL_SHEET_CSV_URL = os.environ.get("EMAIL_SHEET_CSV_URL") or ""
+
+
+def get_telegram_chat_ids() -> list:
+    """Fusionne les chat_id fixes (secret) et les abonnés dynamiques."""
+    ids = set(STATIC_TELEGRAM_CHAT_IDS)
+    if SUBSCRIBERS_FILE.exists():
+        try:
+            data = json.loads(SUBSCRIBERS_FILE.read_text())
+            ids.update(data.get("telegram", {}).keys())
+        except Exception as e:
+            print(f"[Abonnés Telegram] erreur de lecture: {e}")
+    return list(ids)
+
+
+def get_email_recipients() -> list:
+    """Fusionne les emails fixes (secret) et ceux du Google Form (CSV)."""
+    emails = set(EMAIL_RECIPIENTS)
+    if EMAIL_SHEET_CSV_URL:
+        try:
+            resp = requests.get(EMAIL_SHEET_CSV_URL, timeout=20)
+            resp.raise_for_status()
+            for line in resp.text.splitlines()[1:]:  # ignore l'en-tête
+                for cell in line.split(","):
+                    cell = cell.strip().strip('"')
+                    if "@" in cell:
+                        emails.add(cell)
+        except Exception as e:
+            print(f"[Emails Google Form] erreur de lecture: {e}")
+    return list(emails)
 
 # ============ CIBLES À SURVEILLER ============
 
@@ -200,35 +234,37 @@ def detect_newly_bookable(previous: dict, current: dict) -> list:
 
 
 def notify_email(subject: str, body: str):
-    if not (ENABLE_EMAIL and SMTP_USER and SMTP_PASSWORD and EMAIL_RECIPIENTS):
+    recipients = get_email_recipients()
+    if not (ENABLE_EMAIL and SMTP_USER and SMTP_PASSWORD and recipients):
         return
     try:
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
             server.starttls()
             server.login(SMTP_USER, SMTP_PASSWORD)
-            for recipient in EMAIL_RECIPIENTS:
+            for recipient in recipients:
                 msg = MIMEText(body)
                 msg["Subject"] = subject
                 msg["From"] = SMTP_USER
                 msg["To"] = recipient
                 server.send_message(msg)
-        print(f"[Email] envoyé à {len(EMAIL_RECIPIENTS)} destinataire(s).")
+        print(f"[Email] envoyé à {len(recipients)} destinataire(s).")
     except Exception as e:
         print(f"[Email] erreur: {e}")
 
 
 def notify_telegram(text: str):
-    if not (ENABLE_TELEGRAM and TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_IDS):
+    chat_ids = get_telegram_chat_ids()
+    if not (ENABLE_TELEGRAM and TELEGRAM_BOT_TOKEN and chat_ids):
         return
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     ok_count = 0
-    for chat_id in TELEGRAM_CHAT_IDS:
+    for chat_id in chat_ids:
         try:
             requests.post(url, data={"chat_id": chat_id, "text": text}, timeout=15)
             ok_count += 1
         except Exception as e:
             print(f"[Telegram] erreur pour chat_id={chat_id}: {e}")
-    print(f"[Telegram] envoyé à {ok_count}/{len(TELEGRAM_CHAT_IDS)} destinataire(s).")
+    print(f"[Telegram] envoyé à {ok_count}/{len(chat_ids)} destinataire(s).")
 
 
 def notify_desktop(title: str, message: str):
@@ -262,6 +298,47 @@ def notify_newly_open(target_name: str, page_url: str, sessions: list):
     notify_desktop(title, body)
 
 
+def write_dashboard_status(targets: list, all_state: dict, error_targets: set):
+    """
+    Écrit docs/status.json, consommé par le tableau de bord web
+    (docs/index.html, servi par GitHub Pages).
+    """
+    docs_dir = Path(__file__).parent / "docs"
+    docs_dir.mkdir(exist_ok=True)
+
+    target_statuses = []
+    for target in targets:
+        name = target["name"]
+        sessions = all_state.get(name, {})
+        open_count = sum(1 for s in sessions.values() if s.get("quantity_left", -1) > 0)
+        target_statuses.append({
+            "name": name,
+            "page_url": target.get("page_url", target.get("api_url", "")),
+            "session_count": len(sessions),
+            "open_count": open_count,
+            "error": name in error_targets,
+        })
+
+    telegram_count = 0
+    if SUBSCRIBERS_FILE.exists():
+        try:
+            telegram_count = len(json.loads(SUBSCRIBERS_FILE.read_text()).get("telegram", {}))
+        except Exception:
+            pass
+
+    email_count = len(get_email_recipients())
+
+    status = {
+        "last_check_utc": datetime.now(timezone.utc).isoformat(),
+        "targets": target_statuses,
+        "subscriber_counts": {
+            "telegram": telegram_count,
+            "email": email_count,
+        },
+    }
+    (docs_dir / "status.json").write_text(json.dumps(status, indent=2, ensure_ascii=False))
+
+
 # ============ MAIN ============
 
 
@@ -292,6 +369,7 @@ def main():
     all_state = load_last_state()
     new_all_state = {}
     any_error = False
+    error_targets = set()
 
     for target in targets:
         name = target["name"]
@@ -304,6 +382,7 @@ def main():
         except Exception as e:
             print(f"Erreur pour '{name}': {e}")
             any_error = True
+            error_targets.add(name)
             # on garde l'ancien état de cette cible pour ne pas perdre
             # sa mémoire à cause d'une erreur réseau ponctuelle
             new_all_state[name] = all_state.get(name, {})
@@ -321,6 +400,7 @@ def main():
         new_all_state[name] = {str(k): v for k, v in current.items()}
 
     save_state(new_all_state)
+    write_dashboard_status(targets, new_all_state, error_targets)
 
     if any_error:
         sys.exit(1)
