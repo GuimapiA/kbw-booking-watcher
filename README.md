@@ -10,7 +10,7 @@ système butlerapp).
 
 ## 2. Plusieurs destinataires
 - **Telegram** : mets plusieurs `chat_id` séparés par une virgule dans
-  le secret `TELEGRAM_CHAT_ID`, ex: `6804016670, 123456789`
+  le secret `TELEGRAM_CHAT_ID`, ex: `987654321, 123456789`
 - **Email** : mets plusieurs adresses séparées par une virgule dans le
   secret `EMAIL_TO`, ex: `alice@example.com, bob@example.com`
 
