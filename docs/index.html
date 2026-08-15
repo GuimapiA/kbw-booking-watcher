@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KBW Booking Watcher — Tableau de bord</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --card: #1a1d29;
+    --border: #2a2e3d;
+    --text: #e8e9ed;
+    --muted: #8b8fa3;
+    --green: #3ecf8e;
+    --red: #ef5b5b;
+    --accent: #6c8cff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 20px;
+  }
+  h1 { font-size: 1.4rem; margin-bottom: 4px; }
+  .subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 24px; }
+  .summary {
+    display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;
+  }
+  .summary-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 18px; flex: 1; min-width: 130px;
+  }
+  .summary-card .num { font-size: 1.6rem; font-weight: 700; }
+  .summary-card .label { color: var(--muted); font-size: 0.78rem; }
+  .target {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px; margin-bottom: 12px;
+  }
+  .target-header { display: flex; justify-content: space-between; align-items: center; }
+  .target-name { font-weight: 600; font-size: 1rem; }
+  .badge {
+    font-size: 0.75rem; padding: 3px 10px; border-radius: 999px; font-weight: 600;
+  }
+  .badge.open { background: rgba(62,207,142,0.15); color: var(--green); }
+  .badge.closed { background: rgba(139,143,163,0.15); color: var(--muted); }
+  .badge.error { background: rgba(239,91,91,0.15); color: var(--red); }
+  .target-meta { color: var(--muted); font-size: 0.8rem; margin-top: 6px; }
+  a { color: var(--accent); text-decoration: none; }
+  .refresh-note { color: var(--muted); font-size: 0.75rem; margin-top: 24px; text-align: center; }
+  #loading, #error { color: var(--muted); text-align: center; padding: 40px 0; }
+</style>
+</head>
+<body>
+  <h1>🎓 KBW Booking Watcher</h1>
+  <div class="subtitle">Tableau de bord admin — surveillance des examens Deutsch B1/B2</div>
+
+  <div id="loading">Chargement...</div>
+  <div id="error" style="display:none;">Impossible de charger le statut. Vérifie que le workflow a déjà tourné au moins une fois.</div>
+  <div id="content" style="display:none;">
+    <div class="summary" id="summary"></div>
+    <div id="targets"></div>
+    <div class="refresh-note" id="lastcheck"></div>
+  </div>
+
+<script>
+async function loadStatus() {
+  try {
+    const res = await fetch('status.json?t=' + Date.now());
+    if (!res.ok) throw new Error('not found');
+    const data = await res.json();
+    render(data);
+  } catch (e) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error').style.display = 'block';
+  }
+}
+
+function render(data) {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('content').style.display = 'block';
+
+  const totalOpen = data.targets.reduce((sum, t) => sum + t.open_count, 0);
+  const totalSessions = data.targets.reduce((sum, t) => sum + t.session_count, 0);
+
+  document.getElementById('summary').innerHTML = `
+    <div class="summary-card"><div class="num">${data.targets.length}</div><div class="label">Examens surveillés</div></div>
+    <div class="summary-card"><div class="num">${totalOpen}</div><div class="label">Sessions réservables</div></div>
+    <div class="summary-card"><div class="num">${totalSessions}</div><div class="label">Sessions suivies</div></div>
+    <div class="summary-card"><div class="num">${data.subscriber_counts.telegram}</div><div class="label">Abonnés Telegram</div></div>
+    <div class="summary-card"><div class="num">${data.subscriber_counts.email}</div><div class="label">Abonnés Email</div></div>
+  `;
+
+  document.getElementById('targets').innerHTML = data.targets.map(t => {
+    let badgeClass = 'closed', badgeText = 'Complet';
+    if (t.error) { badgeClass = 'error'; badgeText = 'Erreur'; }
+    else if (t.open_count > 0) { badgeClass = 'open'; badgeText = t.open_count + ' place(s) ouverte(s)'; }
+    return `
+      <div class="target">
+        <div class="target-header">
+          <div class="target-name">${t.name}</div>
+          <div class="badge ${badgeClass}">${badgeText}</div>
+        </div>
+        <div class="target-meta">
+          ${t.session_count} session(s) suivie(s) · <a href="${t.page_url}" target="_blank">Voir la page</a>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const lastCheck = new Date(data.last_check_utc);
+  document.getElementById('lastcheck').textContent =
+    'Dernière vérification : ' + lastCheck.toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }) + ' (UTC)';
+}
+
+loadStatus();
+</script>
+</body>
+</html>
