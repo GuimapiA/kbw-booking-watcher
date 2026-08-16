@@ -136,6 +136,13 @@ function render(data) {
 loadStatus();
 loadLinks();
 
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js").catch(() => {
+    // Pas grave si ça échoue : le tableau de bord reste utilisable
+    // dans le navigateur, juste pas installable comme app autonome.
+  });
+}
+
 async function loadLinks() {
   try {
     const res = await fetch('links.json?t=' + Date.now());
