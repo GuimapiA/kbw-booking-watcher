@@ -16,6 +16,11 @@ on:
         required: false
         type: boolean
         default: false
+      force_check:
+        description: "Forcer une vraie vérification même hors fenêtre 7h-18h"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write   # nécessaire pour committer le fichier d'état
@@ -36,6 +41,7 @@ jobs:
       - name: Lancer le script
         env:
           FORCE_TEST_NOTIFY: ${{ github.event.inputs.test_notify }}
+          FORCE_CHECK: ${{ github.event.inputs.force_check }}
           API_URL: ${{ secrets.API_URL }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
