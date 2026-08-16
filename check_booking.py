@@ -32,6 +32,7 @@ racine du dépôt). Pour en ajouter un :
 
 import json
 import os
+import re
 import smtplib
 import sys
 from datetime import datetime, timezone
@@ -94,8 +95,16 @@ def get_telegram_chat_ids() -> list:
     return list(ids)
 
 
+EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
 def get_email_recipients() -> list:
-    """Fusionne les emails fixes (secret) et ceux du Google Form (CSV)."""
+    """
+    Fusionne les emails fixes (secret) et ceux du Google Form (CSV).
+    Filtre les entrées qui ne ressemblent pas à une adresse email
+    valide (utile car la validation native du formulaire n'est pas
+    toujours disponible/fiable).
+    """
     emails = set(EMAIL_RECIPIENTS)
     if EMAIL_SHEET_CSV_URL:
         try:
@@ -104,8 +113,10 @@ def get_email_recipients() -> list:
             for line in resp.text.splitlines()[1:]:  # ignore l'en-tête
                 for cell in line.split(","):
                     cell = cell.strip().strip('"')
-                    if "@" in cell:
+                    if EMAIL_REGEX.match(cell):
                         emails.add(cell)
+                    elif "@" in cell:
+                        print(f"[Emails Google Form] adresse ignorée (invalide): {cell}")
         except Exception as e:
             print(f"[Emails Google Form] erreur de lecture: {e}")
     return list(emails)
@@ -237,19 +248,26 @@ def notify_email(subject: str, body: str):
     recipients = get_email_recipients()
     if not (ENABLE_EMAIL and SMTP_USER and SMTP_PASSWORD and recipients):
         return
+    sent, failed = 0, 0
     try:
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
             server.starttls()
             server.login(SMTP_USER, SMTP_PASSWORD)
             for recipient in recipients:
-                msg = MIMEText(body)
-                msg["Subject"] = subject
-                msg["From"] = SMTP_USER
-                msg["To"] = recipient
-                server.send_message(msg)
-        print(f"[Email] envoyé à {len(recipients)} destinataire(s).")
+                try:
+                    msg = MIMEText(body)
+                    msg["Subject"] = subject
+                    msg["From"] = SMTP_USER
+                    msg["To"] = recipient
+                    server.send_message(msg)
+                    sent += 1
+                except Exception as e:
+                    failed += 1
+                    print(f"[Email] échec pour {recipient}: {e}")
     except Exception as e:
-        print(f"[Email] erreur: {e}")
+        print(f"[Email] erreur de connexion SMTP: {e}")
+        return
+    print(f"[Email] envoyé à {sent} destinataire(s), {failed} échec(s).")
 
 
 def notify_telegram(text: str):
@@ -356,7 +374,7 @@ def main():
         print("Notification de test envoyée (si les identifiants sont corrects).")
         return
 
-    if not is_within_active_window():
+    if not is_within_active_window() and os.environ.get("FORCE_CHECK") != "true":
         now_utc = datetime.now(timezone.utc)
         cameroon_hour = (now_utc.hour + CAMEROON_UTC_OFFSET_HOURS) % 24
         print(
