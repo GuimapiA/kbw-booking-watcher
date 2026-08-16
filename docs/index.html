@@ -50,11 +50,25 @@
   a { color: var(--accent); text-decoration: none; }
   .refresh-note { color: var(--muted); font-size: 0.75rem; margin-top: 24px; text-align: center; }
   #loading, #error { color: var(--muted); text-align: center; padding: 40px 0; }
+  .links-section { margin-bottom: 24px; }
+  .links-section h2 { font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 10px; }
+  .links-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .link-chip {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 999px; padding: 8px 16px; font-size: 0.85rem;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .link-chip:hover { border-color: var(--accent); }
 </style>
 </head>
 <body>
   <h1>🎓 KBW Booking Watcher</h1>
   <div class="subtitle">Tableau de bord admin — surveillance des examens Deutsch B1/B2</div>
+
+  <div class="links-section" id="links-section" style="display:none;">
+    <h2>Raccourcis</h2>
+    <div class="links-grid" id="links-grid"></div>
+  </div>
 
   <div id="loading">Chargement...</div>
   <div id="error" style="display:none;">Impossible de charger le statut. Vérifie que le workflow a déjà tourné au moins une fois.</div>
@@ -115,6 +129,23 @@ function render(data) {
 }
 
 loadStatus();
+loadLinks();
+
+async function loadLinks() {
+  try {
+    const res = await fetch('links.json?t=' + Date.now());
+    if (!res.ok) return;
+    const links = await res.json();
+    const entries = Object.entries(links);
+    if (entries.length === 0) return;
+    document.getElementById('links-section').style.display = 'block';
+    document.getElementById('links-grid').innerHTML = entries.map(([label, url]) =>
+      `<a class="link-chip" href="${url}" target="_blank">🔗 ${label}</a>`
+    ).join('');
+  } catch (e) {
+    // silencieux : les raccourcis sont juste un bonus, pas critique
+  }
+}
 </script>
 </body>
 </html>
