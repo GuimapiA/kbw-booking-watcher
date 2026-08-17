@@ -316,13 +316,39 @@ def notify_newly_open(target_name: str, page_url: str, sessions: list):
     notify_desktop(title, body)
 
 
+DASHBOARD_REFRESH_MINUTES = 15  # ne réécrire docs/status.json (et donc
+                                 # déclencher un redéploiement Pages) que
+                                 # tous les 30 min max, pour éviter les
+                                 # déploiements qui se bousculent
+
+
 def write_dashboard_status(targets: list, all_state: dict, error_targets: set):
     """
     Écrit docs/status.json, consommé par le tableau de bord web
     (docs/index.html, servi par GitHub Pages).
+
+    Limité à une écriture toutes les DASHBOARD_REFRESH_MINUTES minutes
+    pour éviter de déclencher un redéploiement GitHub Pages à chaque
+    exécution du script (ce qui surchargeait la file de déploiement).
     """
     docs_dir = Path(__file__).parent / "docs"
     docs_dir.mkdir(exist_ok=True)
+    status_file = docs_dir / "status.json"
+
+    if status_file.exists():
+        try:
+            previous = json.loads(status_file.read_text())
+            last_check = datetime.fromisoformat(previous["last_check_utc"])
+            elapsed_minutes = (datetime.now(timezone.utc) - last_check).total_seconds() / 60
+            if elapsed_minutes < DASHBOARD_REFRESH_MINUTES:
+                print(
+                    f"[Tableau de bord] pas encore rafraîchi "
+                    f"(dernière mise à jour il y a {elapsed_minutes:.0f} min, "
+                    f"seuil: {DASHBOARD_REFRESH_MINUTES} min)."
+                )
+                return
+        except Exception:
+            pass  # fichier corrompu/absent -> on le réécrit normalement
 
     target_statuses = []
     for target in targets:
