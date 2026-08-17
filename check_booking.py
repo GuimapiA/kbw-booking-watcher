@@ -66,7 +66,7 @@ SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD") or ""  # mot de passe d'applicat
 
 # Plusieurs destinataires possibles, séparés par des virgules,
 # ex: "alice@example.com, bob@example.com"
-EMAIL_TO_RAW = os.environ.get("EMAIL_TO") or SMTP_USER
+EMAIL_TO_RAW = os.environ.get("EMAIL_TO") or ""
 EMAIL_RECIPIENTS = [e.strip() for e in EMAIL_TO_RAW.split(",") if e.strip()]
 
 # --- Telegram ---
