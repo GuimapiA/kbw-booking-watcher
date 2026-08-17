@@ -1,9 +1,5 @@
 {
   "telegram": {
-    "6804016670": {
-      "name": "Guimapi (admin)",
-      "joined": null
-    },
     "8025110536": {
       "name": "Melo",
       "joined": 1786828917
@@ -19,9 +15,13 @@
     "7532217893": {
       "name": "Wil",
       "joined": 1786977249
+    },
+    "6804016670": {
+      "name": "Gaston",
+      "joined": 1786979205
     }
   },
   "_meta": {
-    "last_update_id": 31610756
+    "last_update_id": 31610759
   }
 }
