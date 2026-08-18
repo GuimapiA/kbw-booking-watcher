@@ -30,6 +30,7 @@ racine du dépôt). Pour en ajouter un :
      Python ni aux secrets).
 """
 
+import csv
 import json
 import os
 import re
@@ -120,6 +121,75 @@ def get_email_recipients() -> list:
         except Exception as e:
             print(f"[Emails Google Form] erreur de lecture: {e}")
     return list(emails)
+
+
+# --- Notifications Push (Web Push) ---
+PUSH_SHEET_CSV_URL = os.environ.get("PUSH_SHEET_CSV_URL") or ""
+VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY") or ""
+VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY") or ""
+VAPID_CLAIMS_EMAIL = os.environ.get("VAPID_CLAIMS_EMAIL") or ""
+
+
+def get_push_subscriptions() -> list:
+    """
+    Récupère les abonnements Web Push stockés via le Google Form dédié
+    (même principe que les emails). Chaque ligne du CSV contient un
+    JSON (l'objet PushSubscription du navigateur) dans une cellule.
+    """
+    subs = []
+    if not PUSH_SHEET_CSV_URL:
+        return subs
+    try:
+        resp = requests.get(PUSH_SHEET_CSV_URL, timeout=20)
+        resp.raise_for_status()
+        reader = csv.reader(resp.text.splitlines())
+        rows = list(reader)
+        for row in rows[1:]:  # ignore l'en-tête
+            for cell in row:
+                cell = cell.strip()
+                if cell.startswith("{") and '"endpoint"' in cell:
+                    try:
+                        subs.append(json.loads(cell))
+                    except Exception:
+                        pass
+    except Exception as e:
+        print(f"[Push] erreur de lecture des abonnements: {e}")
+    # Déduplique par endpoint (un même appareil peut réapparaître)
+    seen = set()
+    unique_subs = []
+    for s in subs:
+        endpoint = s.get("endpoint")
+        if endpoint and endpoint not in seen:
+            seen.add(endpoint)
+            unique_subs.append(s)
+    return unique_subs
+
+
+def notify_push(title: str, body: str, url: str = "./"):
+    subs = get_push_subscriptions()
+    if not (subs and VAPID_PRIVATE_KEY and VAPID_CLAIMS_EMAIL):
+        return
+    try:
+        from pywebpush import webpush, WebPushException
+    except ImportError:
+        print("[Push] bibliothèque pywebpush non installée, notifications push ignorées.")
+        return
+
+    payload = json.dumps({"title": title, "body": body, "url": url})
+    sent, failed = 0, 0
+    for sub in subs:
+        try:
+            webpush(
+                subscription_info=sub,
+                data=payload,
+                vapid_private_key=VAPID_PRIVATE_KEY,
+                vapid_claims={"sub": f"mailto:{VAPID_CLAIMS_EMAIL}"},
+            )
+            sent += 1
+        except Exception as e:
+            failed += 1
+            print(f"[Push] échec d'envoi: {e}")
+    print(f"[Push] envoyé à {sent} appareil(s), {failed} échec(s).")
 
 # ============ CIBLES À SURVEILLER ============
 
@@ -315,8 +385,16 @@ def notify_newly_open(target_name: str, page_url: str, sessions: list):
     notify_telegram(body)
     notify_desktop(title, body)
 
+    # Le push reste volontairement vague (pas de détail sur la session
+    # précise), juste de quoi prévenir vite fait.
+    notify_push(
+        "🎓 Une place s'est libérée !",
+        f"Vérifie vite : {target_name}",
+        url=page_url,
+    )
 
-DASHBOARD_REFRESH_MINUTES = 15  # ne réécrire docs/status.json (et donc
+
+DASHBOARD_REFRESH_MINUTES = 30  # ne réécrire docs/status.json (et donc
                                  # déclencher un redéploiement Pages) que
                                  # tous les 30 min max, pour éviter les
                                  # déploiements qui se bousculent
@@ -381,6 +459,21 @@ def write_dashboard_status(targets: list, all_state: dict, error_targets: set):
         },
     }
     (docs_dir / "status.json").write_text(json.dumps(status, indent=2, ensure_ascii=False))
+
+    # --- Données admin (liste nominative, page protégée par mot de passe) ---
+    telegram_names = []
+    if SUBSCRIBERS_FILE.exists():
+        try:
+            sub_data = json.loads(SUBSCRIBERS_FILE.read_text())
+            telegram_names = [v.get("name", k) for k, v in sub_data.get("telegram", {}).items()]
+        except Exception:
+            pass
+
+    admin_data = {
+        "telegram": telegram_names,
+        "emails": get_email_recipients(),
+    }
+    (docs_dir / "admin-data.json").write_text(json.dumps(admin_data, indent=2, ensure_ascii=False))
 
 
 # ============ MAIN ============
