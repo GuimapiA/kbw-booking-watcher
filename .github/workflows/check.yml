@@ -49,6 +49,10 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
           EMAIL_SHEET_CSV_URL: ${{ secrets.EMAIL_SHEET_CSV_URL }}
+          PUSH_SHEET_CSV_URL: ${{ secrets.PUSH_SHEET_CSV_URL }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_CLAIMS_EMAIL: ${{ secrets.VAPID_CLAIMS_EMAIL }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python check_booking.py
@@ -60,6 +64,9 @@ jobs:
           git add last_state.json
           if [ -f docs/status.json ]; then
             git add docs/status.json
+          fi
+          if [ -f docs/admin-data.json ]; then
+            git add docs/admin-data.json
           fi
           git diff --quiet --cached || git commit -m "update state"
           git push
