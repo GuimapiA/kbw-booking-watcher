@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — KBW Booking Watcher</title>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+<style>
+  :root {
+    --bg: #0f1117; --card: #1a1d29; --border: #2a2e3d;
+    --text: #e8e9ed; --muted: #8b8fa3; --accent: #6c8cff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg); color: var(--text); padding: 20px;
+  }
+  h1 { font-size: 1.3rem; margin-bottom: 20px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px; margin-bottom: 14px;
+  }
+  .card h2 { font-size: 0.9rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; margin: 0 0 12px 0; }
+  a.item, .item {
+    display: block; padding: 10px 0; border-bottom: 1px solid var(--border);
+    color: var(--text); text-decoration: none; font-size: 0.9rem;
+  }
+  a.item:last-child, .item:last-child { border-bottom: none; }
+  a.item:hover { color: var(--accent); }
+  #gate {
+    max-width: 320px; margin: 80px auto; text-align: center;
+  }
+  #gate input {
+    width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--card); color: var(--text); font-size: 1rem; margin-bottom: 12px;
+  }
+  #gate button {
+    width: 100%; padding: 12px; border-radius: 8px; border: none;
+    background: var(--accent); color: white; font-size: 1rem; cursor: pointer;
+  }
+  #gate p { color: var(--muted); font-size: 0.8rem; }
+  #content { display: none; max-width: 600px; margin: 0 auto; }
+  .muted { color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <h1>🔒 Accès admin</h1>
+  <input type="password" id="pwd" placeholder="Mot de passe">
+  <button onclick="checkPassword()">Entrer</button>
+  <p>Barrière simple, pas une vraie sécurité — ne rien mettre ici de critique (tokens, mots de passe de comptes...).</p>
+</div>
+
+<div id="content">
+  <h1>🔧 Panneau admin — KBW Booking Watcher</h1>
+
+  <div class="card">
+    <h2>Liens</h2>
+    <a class="item" href="https://github.com/GuimapiA/kbw-booking-watcher" target="_blank">📦 Dépôt GitHub</a>
+    <a class="item" href="https://github.com/GuimapiA/kbw-booking-watcher/actions" target="_blank">⚙️ GitHub Actions</a>
+  </div>
+
+  <div class="card">
+    <h2>Abonnés Telegram (<span id="tg-count">…</span>)</h2>
+    <div id="tg-list" class="muted">Chargement...</div>
+  </div>
+
+  <div class="card">
+    <h2>Abonnés Email (<span id="email-count">…</span>)</h2>
+    <div id="email-list" class="muted">Chargement...</div>
+  </div>
+</div>
+
+<script>
+const PASSWORD = "Alch@2504";
+
+function checkPassword() {
+  const input = document.getElementById("pwd").value;
+  if (input === PASSWORD) {
+    document.getElementById("gate").style.display = "none";
+    document.getElementById("content").style.display = "block";
+    loadAdminData();
+  } else {
+    alert("Mot de passe incorrect.");
+  }
+}
+
+document.getElementById("pwd").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") checkPassword();
+});
+
+async function loadAdminData() {
+  try {
+    const res = await fetch("admin-data.json?t=" + Date.now());
+    if (!res.ok) throw new Error("not found");
+    const data = await res.json();
+
+    document.getElementById("tg-count").textContent = data.telegram.length;
+    document.getElementById("tg-list").innerHTML = data.telegram.length
+      ? data.telegram.map(n => `<div class="item">👤 ${n}</div>`).join("")
+      : "Aucun abonné pour l'instant.";
+
+    document.getElementById("email-count").textContent = data.emails.length;
+    document.getElementById("email-list").innerHTML = data.emails.length
+      ? data.emails.map(e => `<div class="item">✉️ ${e}</div>`).join("")
+      : "Aucun abonné pour l'instant.";
+  } catch (e) {
+    document.getElementById("tg-list").textContent = "Impossible de charger les données.";
+    document.getElementById("email-list").textContent = "Impossible de charger les données.";
+  }
+}
+</script>
+</body>
+</html>
