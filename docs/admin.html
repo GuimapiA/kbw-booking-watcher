@@ -75,6 +75,12 @@
 <script>
 const PASSWORD = "Alch@2504";
 
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
 function checkPassword() {
   const input = document.getElementById("pwd").value;
   if (input === PASSWORD) {
@@ -98,12 +104,12 @@ async function loadAdminData() {
 
     document.getElementById("tg-count").textContent = data.telegram.length;
     document.getElementById("tg-list").innerHTML = data.telegram.length
-      ? data.telegram.map(n => `<div class="item">👤 ${n}</div>`).join("")
+      ? data.telegram.map(n => `<div class="item">👤 ${escapeHtml(n)}</div>`).join("")
       : "Aucun abonné pour l'instant.";
 
     document.getElementById("email-count").textContent = data.emails.length;
     document.getElementById("email-list").innerHTML = data.emails.length
-      ? data.emails.map(e => `<div class="item">✉️ ${e}</div>`).join("")
+      ? data.emails.map(e => `<div class="item">✉️ ${escapeHtml(e)}</div>`).join("")
       : "Aucun abonné pour l'instant.";
   } catch (e) {
     document.getElementById("tg-list").textContent = "Impossible de charger les données.";
