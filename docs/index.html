@@ -86,6 +86,7 @@
     <div class="summary" id="summary"></div>
     <div id="targets"></div>
     <div class="refresh-note" id="lastcheck"></div>
+    <div class="refresh-note" style="margin-top:8px;"><a href="admin.html" style="color:var(--muted);">🔧 Admin</a></div>
   </div>
 
 <script>
@@ -205,7 +206,10 @@ async function loadLinks() {
       `<a class="link-chip" href="${url}" target="_blank">🔗 ${label}</a>`
     ).join('');
   } catch (e) {
-    // silencieux : les raccourcis sont juste un bonus, pas critique
+    // Erreur silencieuse par design, mais on log pour le débogage :
+    // si links.json a une erreur de syntaxe (virgule oubliée, etc.),
+    // ça apparaîtra dans la Console du navigateur (F12 > Console).
+    console.warn("Impossible de charger links.json :", e);
   }
 }
 </script>
