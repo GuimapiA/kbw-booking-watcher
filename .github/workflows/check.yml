@@ -8,7 +8,7 @@ on:
   repository_dispatch:
     # Déclenché depuis l'extérieur (cron-job.org) via l'API GitHub,
     # pour contourner les délais du déclencheur "schedule" natif.
-    types: [check-booking]
+    types: [run-all]
   workflow_dispatch:
     inputs:
       test_notify:
