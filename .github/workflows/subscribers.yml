@@ -6,7 +6,7 @@ on:
     # à toute heure), toutes les 5 minutes
     - cron: "*/3 * * * *"
   repository_dispatch:
-    types: [manage-subscribers]
+    types: [run-all]
   workflow_dispatch: {}
 
 permissions:
