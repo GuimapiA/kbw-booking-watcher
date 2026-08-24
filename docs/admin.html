@@ -49,20 +49,26 @@
   <h1>🔒 Accès admin</h1>
   <input type="password" id="pwd" placeholder="Mot de passe">
   <button onclick="checkPassword()">Entrer</button>
-  <p>Cet espace est reservé à l'adinistrateur de ce site, et pour y entrer un mot de passe est requis.
-	Veuillez donc à ne pas y inserer d'informations sensibles.
-  </p>
+  <p>Barrière simple, pas une vraie sécurité — ne rien mettre ici de critique (tokens, mots de passe de comptes...).</p>
 </div>
 
 <div id="content">
   <h1>🔧 Panneau admin — KBW Booking Watcher</h1>
 
   <div class="card">
-    <h2>Liens d'administrations</h2>
+    <h2>Liens</h2>
     <a class="item" href="https://github.com/GuimapiA/kbw-booking-watcher" target="_blank">📦 Dépôt GitHub</a>
     <a class="item" href="https://github.com/GuimapiA/kbw-booking-watcher/actions" target="_blank">⚙️ GitHub Actions</a>
-	<a class="item" href="https://docs.google.com/spreadsheets/d/1OZhNCLU-fKIrUq4RQXWUTBTDMNvXe1g7iGfx7yfUpfM/edit?usp=drivesdk" target="_blank">📫📧 Sheet des abon. email</a>
-	<a class="item" href="https://console.cron-job.org/jobs" target="_blank">🎯 Cron d'execution automatisée du dépôt GitHub</a>
+  </div>
+
+  <div class="card">
+    <h2>Disponibilité des places (brut vs légal)</h2>
+    <div id="availability-list" class="muted">Chargement...</div>
+    <p class="muted" style="margin-top:10px;">
+      "Brut" = places comptabilisées disponibles, même si la date limite
+      d'inscription est dépassée. "Légal" = celles qui déclenchent
+      réellement une notification (places disponibles ET dans les délais).
+    </p>
   </div>
 
   <div class="card">
@@ -115,6 +121,13 @@ async function loadAdminData() {
     document.getElementById("email-list").innerHTML = data.emails.length
       ? data.emails.map(e => `<div class="item">✉️ ${escapeHtml(e)}</div>`).join("")
       : "Aucun abonné pour l'instant.";
+
+    const availability = data.availability || [];
+    document.getElementById("availability-list").innerHTML = availability.length
+      ? availability.map(a =>
+          `<div class="item">📚 ${escapeHtml(a.target)} — brut: <strong>${a.open_raw}</strong>, légal: <strong>${a.open_legal}</strong></div>`
+        ).join("")
+      : "Aucune donnée disponible.";
   } catch (e) {
     document.getElementById("tg-list").textContent = "Impossible de charger les données.";
     document.getElementById("email-list").textContent = "Impossible de charger les données.";
