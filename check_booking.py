@@ -37,6 +37,7 @@ import re
 import smtplib
 import sys
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from email.mime.text import MIMEText
 from pathlib import Path
 from urllib.parse import urlsplit, urlunsplit, parse_qs, urlencode
@@ -249,14 +250,38 @@ def fetch_all_timespans(api_url: str) -> dict:
     return combined
 
 
+def _parse_active_until(attrs: dict):
+    """
+    Convertit le champ active_until (date + fuseau horaire fournis par
+    l'API, ex: Europe/Berlin) en objet datetime "aware" (avec fuseau),
+    pour pouvoir le comparer à l'heure actuelle. Retourne None si le
+    champ est absent ou mal formé (dans ce cas, on ne bloque pas la
+    détection sur ce critère).
+    """
+    au = attrs.get("active_until")
+    if not au or not au.get("date"):
+        return None
+    try:
+        tz_name = au.get("timezone", "Europe/Berlin")
+        naive_dt = datetime.strptime(au["date"], "%Y-%m-%d %H:%M:%S")
+        return naive_dt.replace(tzinfo=ZoneInfo(tz_name))
+    except Exception as e:
+        print(f"[active_until] impossible de parser '{au}': {e}")
+        return None
+
+
 def extract_timespans(data: dict) -> dict:
     """
     Extrait, pour chaque session (course_timespan) trouvée dans la
     réponse, un petit résumé:
-    {id: {"quantity_left": int, "label": str, "book_url": str}}
+    {id: {"quantity_left": int, "label": str, "book_url": str,
+          "active_until": str|None}}
 
-    Le bouton de réservation du site est actif quand quantity_left > 0
-    (places_left suit la même valeur dans les données observées).
+    Le bouton de réservation du site n'est actif que si LES DEUX
+    conditions sont vraies : quantity_left > 0 ET l'heure actuelle est
+    avant active_until (la date limite d'inscription décidée par
+    l'administrateur du site). places_left suit la même valeur que
+    quantity_left dans les données observées.
     """
     entities = data["body"]["entities"]["body"]
 
@@ -264,10 +289,13 @@ def extract_timespans(data: dict) -> dict:
     for ts in entities.get("course_timespans", []):
         attrs = ts["attributes"]
         presented = ts.get("presented", {})
+        active_until_dt = _parse_active_until(attrs)
         result[attrs["id"]] = {
             "quantity_left": attrs.get("quantity_left", attrs.get("places_left", -1)),
             "label": presented.get("titleReplaced", "") + " (" + attrs.get("shortcut", "") + ")",
             "book_url": presented.get("apiBookUrl", ""),
+            # Stocké en ISO 8601 pour rester sérialisable en JSON
+            "active_until": active_until_dt.isoformat() if active_until_dt else None,
         }
     return result
 
@@ -286,23 +314,45 @@ def save_state(state: dict):
     STATE_FILE.write_text(json.dumps(state))
 
 
+def _is_legally_bookable(info: dict) -> bool:
+    """
+    Une session est réservable seulement si les places sont
+    disponibles ET que la date limite d'inscription n'est pas dépassée
+    -- reproduisant la double condition qui contrôle le vrai bouton de
+    réservation sur le site.
+    """
+    quantity = info.get("quantity_left", -1)
+    if quantity is None or quantity <= 0:
+        return False
+
+    active_until_str = info.get("active_until")
+    if active_until_str:
+        try:
+            deadline = datetime.fromisoformat(active_until_str)
+            if datetime.now(timezone.utc) >= deadline:
+                return False
+        except Exception:
+            pass  # date illisible -> on ne bloque pas sur ce critère
+
+    return True
+
+
 def detect_newly_bookable(previous: dict, current: dict) -> list:
     """
-    Retourne la liste des sessions qui viennent de devenir réservables
-    (quantity_left passe de <= 0 (ou inexistant) à > 0).
-    Chaque élément est un dict {"label": str, "book_url": str}.
+    Retourne la liste des sessions qui viennent de devenir légalement
+    réservables (places disponibles ET date limite d'inscription non
+    dépassée), alors qu'elles ne l'étaient pas lors de la vérification
+    précédente. Chaque élément est un dict {"label": str, "book_url": str}.
     """
     newly_open = []
     for ts_id, info in current.items():
         ts_id_str = str(ts_id)
         prev_info = previous.get(ts_id_str)
-        prev_qty = prev_info["quantity_left"] if prev_info else None
-        curr_qty = info["quantity_left"]
 
-        was_open = prev_qty is not None and prev_qty > 0
-        is_open = curr_qty > 0
+        was_bookable = prev_info is not None and _is_legally_bookable(prev_info)
+        is_bookable = _is_legally_bookable(info)
 
-        if is_open and not was_open:
+        if is_bookable and not was_bookable:
             newly_open.append({
                 "label": info["label"] or f"session #{ts_id}",
                 "book_url": info.get("book_url", ""),
@@ -369,17 +419,12 @@ def notify_desktop(title: str, message: str):
 
 def notify_newly_open(target_name: str, page_url: str, sessions: list):
     title = f"🎉 Réservation OUVERTE - {target_name}"
-    lines = []
-    for s in sessions:
-        line = f"- {s['label']}"
-        if s.get("book_url"):
-            line += f"\n  👉 Réserver : {s['book_url']}"
-        lines.append(line)
+    lines = [f"- {s['label']}" for s in sessions]
 
     body = (
         f"{title}\n\nSession(s) désormais réservable(s) :\n"
         + "\n".join(lines)
-        + f"\n\nPage complète : {page_url}\n\nVa réserver vite !"
+        + f"\n\n👉 Choisis et réserve ta date ici : {page_url}\n\nVa réserver vite !"
     )
     notify_email(title, body)
     notify_telegram(body)
@@ -394,7 +439,7 @@ def notify_newly_open(target_name: str, page_url: str, sessions: list):
     )
 
 
-DASHBOARD_REFRESH_MINUTES = 5  # ne réécrire docs/status.json (et donc
+DASHBOARD_REFRESH_MINUTES = 30  # ne réécrire docs/status.json (et donc
                                  # déclencher un redéploiement Pages) que
                                  # tous les 30 min max, pour éviter les
                                  # déploiements qui se bousculent
@@ -469,9 +514,26 @@ def write_dashboard_status(targets: list, all_state: dict, error_targets: set):
         except Exception:
             pass
 
+    # Décompte des places par cible : "brut" (places > 0, même si la
+    # date limite d'inscription est dépassée) vs "légal" (celles qui
+    # déclenchent réellement une notification). Utile pour l'admin
+    # afin de voir la différence entre les deux.
+    availability = []
+    for target in targets:
+        name = target["name"]
+        sessions = all_state.get(name, {})
+        raw_count = sum(1 for s in sessions.values() if s.get("quantity_left", -1) > 0)
+        legal_count = sum(1 for s in sessions.values() if _is_legally_bookable(s))
+        availability.append({
+            "target": name,
+            "open_raw": raw_count,
+            "open_legal": legal_count,
+        })
+
     admin_data = {
         "telegram": telegram_names,
         "emails": get_email_recipients(),
+        "availability": availability,
     }
     (docs_dir / "admin-data.json").write_text(json.dumps(admin_data, indent=2, ensure_ascii=False))
 
