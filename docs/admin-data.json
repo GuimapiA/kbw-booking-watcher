@@ -9,16 +9,16 @@
     "Lux"
   ],
   "emails": [
-    "axelnoumedem62@gmail.com",
-    "merveilleatsafack2@gmail.com",
     "kentsopserena7@gmail.com",
-    "nguissimbiesther3@gmail.com",
-    "dorianelove435@gmail.com",
+    "merveilleatsafack2@gmail.com",
+    "zonfackalex@icloud.com",
     "armandinepako@gmail.com",
-    "paulineginettengoy@gmail.com",
-    "jospinsonagou5@gmail.com",
+    "dorianelove435@gmail.com",
     "leilatsanga6@gmail.com",
-    "zonfackalex@icloud.com"
+    "axelnoumedem62@gmail.com",
+    "jospinsonagou5@gmail.com",
+    "nguissimbiesther3@gmail.com",
+    "paulineginettengoy@gmail.com"
   ],
   "availability": [
     {
@@ -33,18 +33,18 @@
     },
     {
       "target": "Douala - Deutsch B1",
-      "open_raw": 9,
-      "open_legal": 9
+      "open_raw": 8,
+      "open_legal": 8
     },
     {
       "target": "Yaoundé - Deutsch B1",
-      "open_raw": 11,
-      "open_legal": 11
+      "open_raw": 10,
+      "open_legal": 10
     },
     {
       "target": "Yaoundé - Deutsch B2 Schriftlich Wiederholungsprüfung",
-      "open_raw": 1,
-      "open_legal": 1
+      "open_raw": 0,
+      "open_legal": 0
     }
   ]
 }
