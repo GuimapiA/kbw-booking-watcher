@@ -9,32 +9,23 @@
     "Lux"
   ],
   "emails": [
-    "zonfackalex@icloud.com",
-    "paulineginettengoy@gmail.com",
-    "leilatsanga6@gmail.com",
-    "merveilleatsafack2@gmail.com",
-    "armandinepako@gmail.com",
-    "kentsopserena7@gmail.com",
-    "jospinsonagou5@gmail.com",
-    "dorianelove435@gmail.com",
-    "axelnoumedem62@gmail.com",
-    "nguissimbiesther3@gmail.com"
+    "axelnoumedem62@gmail.com"
   ],
   "availability": [
     {
       "target": "Yaoundé - Deutsch B2",
-      "open_raw": 16,
-      "open_legal": 16
+      "open_raw": 14,
+      "open_legal": 14
     },
     {
       "target": "Douala - Deutsch B2",
-      "open_raw": 15,
-      "open_legal": 15
+      "open_raw": 14,
+      "open_legal": 14
     },
     {
       "target": "Douala - Deutsch B1",
-      "open_raw": 11,
-      "open_legal": 11
+      "open_raw": 10,
+      "open_legal": 10
     },
     {
       "target": "Yaoundé - Deutsch B1",
