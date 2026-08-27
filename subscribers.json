@@ -16,10 +16,6 @@
       "name": "Wil",
       "joined": 1786977249
     },
-    "6804016670": {
-      "name": "Gaston",
-      "joined": 1786979205
-    },
     "5019882276": {
       "name": "Ellie",
       "joined": 1787081169
@@ -42,6 +38,6 @@
     }
   },
   "_meta": {
-    "last_update_id": 31610774
+    "last_update_id": 31610775
   }
 }
