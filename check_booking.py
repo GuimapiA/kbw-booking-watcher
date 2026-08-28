@@ -439,7 +439,7 @@ def notify_newly_open(target_name: str, page_url: str, sessions: list):
     )
 
 
-DASHBOARD_REFRESH_MINUTES = 7  # ne réécrire docs/status.json (et donc
+DASHBOARD_REFRESH_MINUTES = 4  # ne réécrire docs/status.json (et donc
                                  # déclencher un redéploiement Pages) que
                                  # tous les 30 min max, pour éviter les
                                  # déploiements qui se bousculent
