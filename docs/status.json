@@ -1,5 +1,5 @@
 {
-  "last_check_utc": "2026-08-29T14:36:35.008261+00:00",
+  "last_check_utc": "2026-08-29T14:42:18.335205+00:00",
   "targets": [
     {
       "name": "Yaoundé - Deutsch B2",
@@ -38,7 +38,7 @@
     }
   ],
   "subscriber_counts": {
-    "telegram": 47,
+    "telegram": 48,
     "email": 31
   }
 }
