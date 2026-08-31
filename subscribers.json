@@ -128,10 +128,6 @@
       "name": "〽️Mãnuel🔱Õswãld〽️",
       "joined": 1787871875
     },
-    "6800991621": {
-      "name": "Jennifer",
-      "joined": 1787905181
-    },
     "7074511814": {
       "name": "Ngouadjio Kitio",
       "joined": 1787909138
@@ -267,9 +263,13 @@
     "8169358643": {
       "name": "Kemeni",
       "joined": 1788167021
+    },
+    "6800991621": {
+      "name": "Jennifer",
+      "joined": 1788171789
     }
   },
   "_meta": {
-    "last_update_id": 31610893
+    "last_update_id": 31610896
   }
 }
