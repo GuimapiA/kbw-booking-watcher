@@ -1,5 +1,5 @@
 {
-  "last_check_utc": "2026-09-01T15:02:03.433229+00:00",
+  "last_check_utc": "2026-09-01T15:07:05.720215+00:00",
   "targets": [
     {
       "name": "Yaoundé - Deutsch B2",
@@ -12,7 +12,7 @@
       "name": "Douala - Deutsch B2",
       "page_url": "https://kbw-personal-services.butlerapp2.de/demo#/courses?fcourses=douala_deutsch_b2",
       "session_count": 36,
-      "open_count": 1,
+      "open_count": 0,
       "error": false
     },
     {
@@ -38,7 +38,7 @@
     }
   ],
   "subscriber_counts": {
-    "telegram": 70,
+    "telegram": 71,
     "email": 45
   }
 }
