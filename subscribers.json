@@ -140,10 +140,6 @@
       "name": "Albert",
       "joined": 1787909833
     },
-    "6191093773": {
-      "name": "Le 10 🏆",
-      "joined": 1787928747
-    },
     "8641082526": {
       "name": "Badiera",
       "joined": 1787936805
@@ -327,9 +323,13 @@
     "2032460844": {
       "name": "Ulrich one flo",
       "joined": 1788479119
+    },
+    "6191093773": {
+      "name": "Le 10 🏆",
+      "joined": 1788511045
     }
   },
   "_meta": {
-    "last_update_id": 31610930
+    "last_update_id": 31610932
   }
 }
