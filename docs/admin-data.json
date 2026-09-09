@@ -116,19 +116,19 @@
     "Andy"
   ],
   "emails": [
-    "gloralemofouet@gmail.com",
-    "armandinepako@gmail.com",
-    "neslinetchoupou20@gmail.com",
-    "dorianelove435@gmail.com",
-    "jospinsonagou5@gmail.com",
-    "kentsopserena7@gmail.com",
-    "nanganathalie980@gmail.com",
     "merveilleatsafack2@gmail.com",
-    "axelnoumedem62@gmail.com",
-    "zonfackalex@icloud.com",
+    "kentsopserena7@gmail.com",
+    "dorianelove435@gmail.com",
+    "armandinepako@gmail.com",
     "nguissimbiesther3@gmail.com",
     "leilatsanga6@gmail.com",
-    "paulineginettengoy@gmail.com"
+    "paulineginettengoy@gmail.com",
+    "nanganathalie980@gmail.com",
+    "jospinsonagou5@gmail.com",
+    "zonfackalex@icloud.com",
+    "gloralemofouet@gmail.com",
+    "neslinetchoupou20@gmail.com",
+    "axelnoumedem62@gmail.com"
   ],
   "availability": [
     {
@@ -138,8 +138,8 @@
     },
     {
       "target": "Douala - Deutsch B2",
-      "open_raw": 3,
-      "open_legal": 3
+      "open_raw": 0,
+      "open_legal": 0
     },
     {
       "target": "Douala - Deutsch B1",
@@ -153,8 +153,8 @@
     },
     {
       "target": "Yaoundé - Deutsch B2 Schriftlich Wiederholungsprüfung",
-      "open_raw": 0,
-      "open_legal": 0
+      "open_raw": 1,
+      "open_legal": 1
     }
   ]
 }
