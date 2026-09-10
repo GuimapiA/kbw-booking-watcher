@@ -1,11 +1,11 @@
 {
-  "last_check_utc": "2026-09-10T14:01:26.613678+00:00",
+  "last_check_utc": "2026-09-10T14:06:43.616322+00:00",
   "targets": [
     {
       "name": "Yaoundé - Deutsch B2",
       "page_url": "https://kbw-personal-services.butlerapp2.de/demo#/courses?fcourses=yaounde_deutsch_b2",
       "session_count": 50,
-      "open_count": 12,
+      "open_count": 11,
       "error": false
     },
     {
