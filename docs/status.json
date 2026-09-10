@@ -1,44 +1,44 @@
 {
-  "last_check_utc": "2026-09-10T12:43:48.780045+00:00",
+  "last_check_utc": "2026-09-10T12:56:23.969559+00:00",
   "targets": [
     {
       "name": "Yaoundé - Deutsch B2",
       "page_url": "https://kbw-personal-services.butlerapp2.de/demo#/courses?fcourses=yaounde_deutsch_b2",
-      "session_count": 58,
-      "open_count": 9,
+      "session_count": 53,
+      "open_count": 14,
       "error": false
     },
     {
       "name": "Douala - Deutsch B2",
       "page_url": "https://kbw-personal-services.butlerapp2.de/demo#/courses?fcourses=douala_deutsch_b2",
-      "session_count": 48,
-      "open_count": 10,
+      "session_count": 46,
+      "open_count": 17,
       "error": false
     },
     {
       "name": "Douala - Deutsch B1",
       "page_url": "https://kbw-personal-services.butlerapp2.de/demo#/courses?fcourses=douala_deutsch_b1",
       "session_count": 25,
-      "open_count": 4,
+      "open_count": 8,
       "error": false
     },
     {
       "name": "Yaoundé - Deutsch B1",
       "page_url": "https://kbw-personal-services.butlerapp2.de/demo#/courses?fcourses=yaounde_deutsch_b1",
       "session_count": 25,
-      "open_count": 5,
+      "open_count": 9,
       "error": false
     },
     {
       "name": "Yaoundé - Deutsch B2 Schriftlich Wiederholungsprüfung",
       "page_url": "https://kbw-personal-services.butlerapp2.de/demo#/courses?fcourses=yaounde_deutsch_b2_schriftlich_wiederholungspruefung",
       "session_count": 6,
-      "open_count": 2,
+      "open_count": 3,
       "error": false
     }
   ],
   "subscriber_counts": {
-    "telegram": 162,
+    "telegram": 163,
     "email": 14
   }
 }
