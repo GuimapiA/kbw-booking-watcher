@@ -167,25 +167,28 @@
     "GORO",
     "Queen",
     "Yannick",
-    "Laura"
+    "Laura",
+    "Fred",
+    "Mosey",
+    "Francine"
   ],
   "emails": [
-    "armandinepako@gmail.com",
-    "zonfackalex@icloud.com",
-    "nanganathalie980@gmail.com",
-    "neslinetchoupou20@gmail.com",
-    "gloralemofouet@gmail.com",
-    "nguissimbiesther3@gmail.com",
-    "axelnoumedem62@gmail.com",
-    "kentsopserena7@gmail.com",
-    "leilatsanga6@gmail.com",
     "dorianelove435@gmail.com",
-    "kayouochrist@gmail.com",
-    "merveilleatsafack2@gmail.com",
-    "affatedjeuy@gmail.com",
-    "jospinsonagou5@gmail.com",
+    "nanganathalie980@gmail.com",
+    "touguembedolvine@gmail.com",
+    "kentsopserena7@gmail.com",
+    "zonfackalex@icloud.com",
+    "nguissimbiesther3@gmail.com",
+    "neslinetchoupou20@gmail.com",
     "paulineginettengoy@gmail.com",
-    "touguembedolvine@gmail.com"
+    "kayouochrist@gmail.com",
+    "armandinepako@gmail.com",
+    "leilatsanga6@gmail.com",
+    "jospinsonagou5@gmail.com",
+    "axelnoumedem62@gmail.com",
+    "merveilleatsafack2@gmail.com",
+    "gloralemofouet@gmail.com",
+    "affatedjeuy@gmail.com"
   ],
   "availability": [
     {
@@ -205,8 +208,8 @@
     },
     {
       "target": "Yaoundé - Deutsch B1",
-      "open_raw": 1,
-      "open_legal": 1
+      "open_raw": 0,
+      "open_legal": 0
     },
     {
       "target": "Yaoundé - Deutsch B2 Schriftlich Wiederholungsprüfung",
