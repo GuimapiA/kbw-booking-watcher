@@ -260,10 +260,6 @@
       "name": "Kemeni",
       "joined": 1788167021
     },
-    "6800991621": {
-      "name": "Jennifer",
-      "joined": 1788171789
-    },
     "8821601759": {
       "name": "Samira",
       "joined": 1788186666
@@ -714,6 +710,6 @@
     }
   },
   "_meta": {
-    "last_update_id": 31611165
+    "last_update_id": 31611167
   }
 }
