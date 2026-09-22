@@ -189,19 +189,19 @@
     "Assoking"
   ],
   "emails": [
-    "Angenaomi134@gmail.com",
-    "estellebidzogo6@gmail.com",
-    "axelnoumedem62@gmail.com",
-    "jockerluma@gmail.com",
     "armandinepako@gmail.com",
+    "estellebidzogo6@gmail.com",
+    "jockerluma@gmail.com",
+    "axelnoumedem62@gmail.com",
+    "jovanyzesseu@icloud.com",
     "jospinsonagou5@gmail.com",
-    "jovanyzesseu@icloud.com"
+    "Angenaomi134@gmail.com"
   ],
   "availability": [
     {
       "target": "Yaoundé - Deutsch B2",
-      "open_raw": 7,
-      "open_legal": 7
+      "open_raw": 6,
+      "open_legal": 6
     },
     {
       "target": "Douala - Deutsch B2",
@@ -220,8 +220,8 @@
     },
     {
       "target": "Yaoundé - Deutsch B2 Schriftlich Wiederholungsprüfung",
-      "open_raw": 2,
-      "open_legal": 2
+      "open_raw": 1,
+      "open_legal": 1
     }
   ]
 }
