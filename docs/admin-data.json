@@ -189,24 +189,24 @@
     "Assoking"
   ],
   "emails": [
-    "armandinepako@gmail.com",
-    "estellebidzogo6@gmail.com",
-    "jockerluma@gmail.com",
-    "axelnoumedem62@gmail.com",
-    "jovanyzesseu@icloud.com",
     "jospinsonagou5@gmail.com",
-    "Angenaomi134@gmail.com"
+    "estellebidzogo6@gmail.com",
+    "Angenaomi134@gmail.com",
+    "armandinepako@gmail.com",
+    "jovanyzesseu@icloud.com",
+    "jockerluma@gmail.com",
+    "axelnoumedem62@gmail.com"
   ],
   "availability": [
     {
       "target": "Yaoundé - Deutsch B2",
-      "open_raw": 6,
-      "open_legal": 6
+      "open_raw": 4,
+      "open_legal": 4
     },
     {
       "target": "Douala - Deutsch B2",
-      "open_raw": 6,
-      "open_legal": 6
+      "open_raw": 2,
+      "open_legal": 2
     },
     {
       "target": "Douala - Deutsch B1",
