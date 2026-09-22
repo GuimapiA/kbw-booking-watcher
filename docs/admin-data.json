@@ -189,13 +189,13 @@
     "Assoking"
   ],
   "emails": [
-    "axelnoumedem62@gmail.com",
-    "Angenaomi134@gmail.com",
-    "jockerluma@gmail.com",
     "jospinsonagou5@gmail.com",
-    "armandinepako@gmail.com",
+    "axelnoumedem62@gmail.com",
+    "estellebidzogo6@gmail.com",
     "jovanyzesseu@icloud.com",
-    "estellebidzogo6@gmail.com"
+    "armandinepako@gmail.com",
+    "Angenaomi134@gmail.com",
+    "jockerluma@gmail.com"
   ],
   "availability": [
     {
@@ -220,8 +220,8 @@
     },
     {
       "target": "Yaoundé - Deutsch B2 Schriftlich Wiederholungsprüfung",
-      "open_raw": 1,
-      "open_legal": 1
+      "open_raw": 0,
+      "open_legal": 0
     }
   ]
 }
