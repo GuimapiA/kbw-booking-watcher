@@ -190,11 +190,11 @@
   ],
   "emails": [
     "estellebidzogo6@gmail.com",
-    "Angenaomi134@gmail.com",
     "armandinepako@gmail.com",
-    "jospinsonagou5@gmail.com",
+    "jovanyzesseu@icloud.com",
     "jockerluma@gmail.com",
-    "jovanyzesseu@icloud.com"
+    "Angenaomi134@gmail.com",
+    "jospinsonagou5@gmail.com"
   ],
   "availability": [
     {
@@ -204,18 +204,18 @@
     },
     {
       "target": "Douala - Deutsch B2",
-      "open_raw": 0,
-      "open_legal": 0
+      "open_raw": 1,
+      "open_legal": 1
     },
     {
       "target": "Douala - Deutsch B1",
-      "open_raw": 0,
-      "open_legal": 0
+      "open_raw": 2,
+      "open_legal": 2
     },
     {
       "target": "Yaoundé - Deutsch B1",
-      "open_raw": 0,
-      "open_legal": 0
+      "open_raw": 3,
+      "open_legal": 3
     },
     {
       "target": "Yaoundé - Deutsch B2 Schriftlich Wiederholungsprüfung",
