@@ -7,12 +7,12 @@
     "Dunamis"
   ],
   "emails": [
-    "armandinepako@gmail.com",
-    "jospinsonagou5@gmail.com",
-    "estellebidzogo6@gmail.com",
-    "axelnoumedem62@gmail.com",
+    "fonkengflore@gmail.com",
     "mikenoumedem87@gmail.com",
-    "fonkengflore@gmail.com"
+    "estellebidzogo6@gmail.com",
+    "jospinsonagou5@gmail.com",
+    "axelnoumedem62@gmail.com",
+    "armandinepako@gmail.com"
   ],
   "availability": [
     {
@@ -32,13 +32,13 @@
     },
     {
       "target": "Yaoundé - Deutsch B1",
-      "open_raw": 0,
-      "open_legal": 0
+      "open_raw": 1,
+      "open_legal": 1
     },
     {
       "target": "Yaoundé - Deutsch B2 Schriftlich Wiederholungsprüfung",
-      "open_raw": 0,
-      "open_legal": 0
+      "open_raw": 1,
+      "open_legal": 1
     }
   ]
 }
