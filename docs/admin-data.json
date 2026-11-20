@@ -10,17 +10,17 @@
     "Andre"
   ],
   "emails": [
-    "axelnoumedem62@gmail.com",
     "armandinepako@gmail.com",
     "estellebidzogo6@gmail.com",
     "assonfackdesiree@gmail.com",
-    "jospinsonagou5@gmail.com"
+    "jospinsonagou5@gmail.com",
+    "axelnoumedem62@gmail.com"
   ],
   "availability": [
     {
       "target": "Yaoundé - Deutsch B2",
-      "open_raw": 0,
-      "open_legal": 0
+      "open_raw": 3,
+      "open_legal": 3
     },
     {
       "target": "Douala - Deutsch B2",
@@ -34,13 +34,13 @@
     },
     {
       "target": "Yaoundé - Deutsch B1",
-      "open_raw": 0,
-      "open_legal": 0
+      "open_raw": 4,
+      "open_legal": 4
     },
     {
       "target": "Yaoundé - Deutsch B2 Schriftlich Wiederholungsprüfung",
-      "open_raw": 0,
-      "open_legal": 0
+      "open_raw": 1,
+      "open_legal": 1
     }
   ]
 }
