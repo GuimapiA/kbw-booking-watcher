@@ -1,5 +1,5 @@
 {
-  "last_check_utc": "2026-11-20T12:19:13.281299+00:00",
+  "last_check_utc": "2026-11-20T12:24:55.803650+00:00",
   "targets": [
     {
       "name": "Yaoundé - Deutsch B2",
@@ -11,8 +11,8 @@
     {
       "name": "Douala - Deutsch B2",
       "page_url": "https://kbw-personal-services.butlerapp2.de/demo#/courses?fcourses=douala_deutsch_b2",
-      "session_count": 30,
-      "open_count": 7,
+      "session_count": 31,
+      "open_count": 8,
       "error": false
     },
     {
@@ -25,7 +25,7 @@
     {
       "name": "Yaoundé - Deutsch B1",
       "page_url": "https://kbw-personal-services.butlerapp2.de/demo#/courses?fcourses=yaounde_deutsch_b1",
-      "session_count": 13,
+      "session_count": 18,
       "open_count": 0,
       "error": false
     },
