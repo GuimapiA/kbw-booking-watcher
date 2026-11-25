@@ -1,5 +1,5 @@
 {
-  "last_check_utc": "2026-11-25T06:56:36.494716+00:00",
+  "last_check_utc": "2026-11-25T07:28:41.578385+00:00",
   "targets": [
     {
       "name": "Yaoundé - Deutsch B2",
@@ -32,7 +32,7 @@
     {
       "name": "Yaoundé - Deutsch B2 Schriftlich Wiederholungsprüfung",
       "page_url": "https://kbw-personal-services.butlerapp2.de/demo#/courses?fcourses=yaounde_deutsch_b2_schriftlich_wiederholungspruefung",
-      "session_count": 5,
+      "session_count": 4,
       "open_count": 0,
       "error": false
     }
